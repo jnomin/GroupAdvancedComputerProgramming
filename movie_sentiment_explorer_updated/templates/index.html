@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1c1c1e">
+  <title>Movie Sentiment Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #1c1c1e;
+      --text: #fff;
+      --card: #2c2c2e;
+      --accent: #0a84ff;
+    }
+    body[data-theme="light"] {
+      --bg: #fff;
+      --text: #000;
+      --card: #f4f4f4;
+      --accent: #007aff;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    header {
+      background: var(--card);
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .container {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    body[data-theme="light"] input[type="text"] {
+      background: #ddd;
+      color: black;
+    }
+    button {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px 0;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .poster {
+      text-align: center;
+    }
+    .poster img {
+      width: 200px;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .sentiment {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .review-box {
+      background: #2c2c2e;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+    body[data-theme="light"] .review-box {
+      background: #eaeaea;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .error {
+      background-color: crimson;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .dark-toggle {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      cursor: pointer;
+    }
+    #chart-container {
+      margin-top: 20px;
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .poster img {
+        width: 100%;
+      }
+    }
+  </style>
+  <script>
+    let chartInstance = null;
+    function toggleDark() {
+      const body = document.body;
+      const current = body.getAttribute('data-theme');
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    function toggleChart() {
+      const chartBox = document.getElementById('chart-container');
+      chartBox.style.display = chartBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function renderChart(imdbRating, sentimentScore) {
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      const ctx = document.getElementById('ratingChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['IMDb Rating', 'User Sentiment'],
+          datasets: [{
+            label: 'Score (0-10)',
+            data: [imdbRating, sentimentScore * 10],
+            backgroundColor: ['orange', 'skyblue']
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10
+            }
+          }
+        }
+      });
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.body.setAttribute('data-theme', saved);
+    };
+  </script>
+</head>
+<body data-theme="dark">
+  <header>
+    🎬 Movie Sentiment Explorer
+    <span class="dark-toggle" onclick="toggleDark()">🌓</span>
+  </header>
+  <div class="container">
+    <form method="post">
+      <input type="text" name="title" placeholder="Enter movie title..." required />
+      <button type="submit">Fetch Info</button>
+    </form>
+
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+    {% if movie %}
+      <div class="poster">
+        {% if movie.poster_url and movie.poster_url != "N/A" %}
+          <img src="{{ movie.poster_url }}" alt="Movie Poster">
+          <div>
+            <form method="get" action="/download-poster">
+              <input type="hidden" name="url" value="{{ movie.poster_url }}">
+              <button type="submit">Download Poster</button>
+            </form>
+          </div>
+        {% else %}
+          <img src="https://via.placeholder.com/200x300.png?text=No+Poster" alt="No Poster">
+        {% endif %}
+      </div>
+      <h2>{{ movie.title }} ({{ movie.year }})</h2>
+      <p><strong>Genre:</strong> {{ movie.genre }}</p>
+      <p><strong>Director:</strong> {{ movie.director }}</p>
+      <p><strong>Plot:</strong> {{ movie.plot }}</p>
+      <p><strong>IMDb Rating:</strong> {{ movie.imdb_rating }}/10</p>
+      <div class="sentiment">
+        🧠 Sentiment Score: {{ sentiment }} 
+      </div>
+      <div class="buttons">
+        <a href="/export/pdf?title={{ movie.title }}"><button type="button">Export PDF</button></a>
+        <a href="/export/csv?title={{ movie.title }}"><button type="button">Export CSV</button></a>
+        <button type="button" onclick="toggleChart(); renderChart(parseFloat('{{ movie.imdb_rating }}'), parseFloat('{{ sentiment }}'))">Show Chart</button>
+      </div>
+
+      <div id="chart-container">
+        <canvas id="ratingChart" width="400" height="200"></canvas>
+      </div>
+
+      <h3>IMDb Reviews</h3>
+      {% for review, label in reviews %}
+        <div class="review-box">
+          <strong>[{{ label }}]</strong> {{ review }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</body>
+</html>

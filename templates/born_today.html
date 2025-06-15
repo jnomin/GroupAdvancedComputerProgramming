@@ -1,0 +1,23 @@
+<div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: center;">
+  {% for person in people %}
+    {% if person.profile_path %}
+      <a href="https://www.themoviedb.org/person/{{ person.tmdb_id }}" target="_blank" style="text-decoration: none; color: inherit;">
+        <div class="featured-item card-style" title="Famous for: {{ person.known_for | join(', ') }}">
+          <img class="actor-image" loading="lazy" src="https://image.tmdb.org/t/p/w300{{ person.profile_path or '/static/default_profile.jpg' }}" alt="{{ person.name }}">
+          <div class="actor-info">
+            <h4>{{ person.name }}</h4>
+            <p>🎭 {{ person.known_for_department }}</p>
+            <p style="font-size: 0.9em;">🎂 {{ person.birthday }}</p>
+            {% if person.known_for %}
+              <div class="known-for">
+                {% for work in person.known_for %}
+                  <span class="badge">{{ work }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>

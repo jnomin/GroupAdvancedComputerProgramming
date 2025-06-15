@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}🎉 Born Today{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 20px;">🎉 Born Today (Top 10)</h2>
+
+{% if error %}
+  <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+  {% for person in people %}
+    {% if person.profile_path %}
+      <div style="width: 160px; text-align: center;">
+        <img src="https://image.tmdb.org/t/p/w300{{ person.profile_path }}" alt="{{ person.name }}" style="width: 100%; border-radius: 8px;">
+        <p style="margin-top: 6px; font-weight: bold;">{{ person.name }}</p>
+        <p style="font-size: 0.9em;">🎂 {{ person.birthday }}</p>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<a href="/" class="btn btn-secondary" style="margin-top: 30px; display: inline-block;">← Back to Home</a>
+{% endblock %}

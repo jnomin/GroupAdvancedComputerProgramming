@@ -1,0 +1,15 @@
+{% if featured %}
+<div class="featured-container">
+  <h3>🔥 Featured Today</h3>
+  <div class="featured-scroll">
+    {% for m in featured %}
+      <a href="{{ url_for('movie_detail', title=m.title) }}" style="text-decoration: none;">
+        <div class="featured-item">
+          <img src="{{ m.poster_url }}" alt="{{ m.title }}">
+          <p>{{ m.title }}</p>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

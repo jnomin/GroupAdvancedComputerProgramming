@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}All Featured Movies{% endblock %}
+
+{% block content %}
+<h3>🔥 All Featured Movies</h3>
+<div class="featured-scroll" style="display: flex; flex-wrap: wrap; gap: 15px;">
+  {% for movie in featured %}
+    {% if movie.poster_path %}
+      <form action="/movie/{{ movie.title }}" method="get" style="display:inline-block;">
+        <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+          <div class="featured-item">
+            <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+            <p>{{ movie.title }}</p>
+          </div>
+        </button>
+      </form>
+    {% endif %}
+  {% endfor %}
+</div>
+<a href="/" class="btn btn-secondary" style="margin-top: 30px;">← Back to Home</a>
+{% endblock %}

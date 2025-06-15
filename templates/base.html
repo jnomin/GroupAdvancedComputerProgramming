@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1c1c1e" />
+  <title>{% block title %}Movie Sentiment Explorer{% endblock %}</title>
+
+  <!-- Fonts + Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='autocomplete.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  {% block head_extra %}{% endblock %}
+
+  <style>
+    :root {
+      --bg: #1c1c1e;
+      --text: #fff;
+      --card: #2c2c2e;
+      --accent: #f5c518;
+    }
+    body[data-theme="light"] {
+      --bg: #fff;
+      --text: #000;
+      --card: #f4f4f4;
+      --accent: #007aff;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    nav {
+      background-color: var(--card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+    }
+    nav .nav-left {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+    nav .nav-right a {
+      color: var(--text);
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+    }
+
+    .toggle-theme-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--accent);
+      color: var(--bg);
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 20px;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .autocomplete-container {
+      position: relative;
+    }
+    #autocomplete-results {
+      position: absolute;
+      background: var(--card);
+      width: 100%;
+      z-index: 10;
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .autocomplete-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .autocomplete-item:hover {
+      background: #444;
+    }
+    .autocomplete-poster {
+      width: 40px;
+      height: 60px;
+      object-fit: cover;
+      margin-right: 10px;
+      border-radius: 4px;
+    }
+    .autocomplete-text {
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <nav>
+    <div class="nav-left">🎬 Movie Sentiment Explorer</div>
+    <div class="nav-right">
+      <a href="/">Home</a>
+      <button class="toggle-theme-btn" onclick="toggleDark()">🌗 Toggle Theme</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    function toggleDark() {
+      const body = document.body;
+      const current = body.getAttribute('data-theme');
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.body.setAttribute('data-theme', saved);
+    };
+  </script>
+</body>
+</html>

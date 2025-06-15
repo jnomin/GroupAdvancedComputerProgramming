@@ -1,0 +1,15 @@
+<div class="autocomplete-container">
+  <form id="search-form" onsubmit="event.preventDefault(); goToMoviePage();">
+    <input 
+      type="text" 
+      id="movie-input" 
+      name="title" 
+      placeholder="Search for a movie..." 
+      autocomplete="off" 
+      required
+    />
+    <div id="autocomplete-results"></div>
+    <button type="submit">Fetch Info</button>
+  </form>
+</div>
+

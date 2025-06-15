@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}{{ movie.title if movie else "Movie Not Found" }}{% endblock %}
+
+{% block content %}
+  {% if error %}
+    <div class="error">{{ error }}</div>
+
+  {% elif movie %}
+    <div class="poster" style="text-align:center;">
+      {% if movie.poster_url and movie.poster_url != "N/A" %}
+        <img src="{{ movie.poster_url }}" alt="Movie Poster">
+      {% else %}
+        <img src="https://via.placeholder.com/200x300.png?text=No+Poster" alt="No Poster">
+      {% endif %}
+    </div>
+
+    <h2>{{ movie.title }} ({{ movie.year }})</h2>
+    <p><strong>Genre:</strong> {{ movie.genre }}</p>
+    <p><strong>Director:</strong> {{ movie.director }}</p>
+    <p><strong>Plot:</strong> {{ movie.plot }}</p>
+    <p><strong>IMDb Rating:</strong> {{ movie.imdb_rating }}/10</p>
+
+    <div class="sentiment">
+      🧠 Sentiment Score: {{ sentiment }}
+    </div>
+
+    <div class="export-buttons" style="margin: 20px 0;">
+      <a href="/download-poster?url={{ movie.poster_url }}&title={{ movie.title | urlencode }}" class="btn">Download Poster</a>
+      <a href="#" onclick="downloadPDF()" class="btn">Export PDF</a>
+    </div>
+
+    <div class="skeleton-card" id="chart-skeleton" style="max-width: 500px; height: 250px; margin: 30px auto; background: #333; border-radius: 8px;"></div>
+    <canvas id="sentimentChart" style="max-width: 500px; margin: 30px auto; display: none;"></canvas>
+
+    {% set sentiment_data = {
+      'Positive': reviews | selectattr(1, 'equalto', 'Positive 😊') | list | length,
+      'Neutral':  reviews | selectattr(1, 'equalto', 'Neutral 😐') | list | length,
+      'Negative': reviews | selectattr(1, 'equalto', 'Negative 😠') | list | length
+    } %}
+    <script type="application/json" id="sentiment-data">
+      {{ sentiment_data | tojson }}
+    </script>
+
+    <p style="text-align:center;">
+      Positive: {{ sentiment_data.Positive }} |
+      Neutral: {{ sentiment_data.Neutral }} |
+      Negative: {{ sentiment_data.Negative }}
+    </p>
+
+    <p><strong>Total Reviews:</strong> {{ reviews | length }}</p>
+    <p><strong>Most Common Sentiment:</strong> 
+      {% if sentiment_data.Positive > sentiment_data.Neutral and sentiment_data.Positive > sentiment_data.Negative %}
+        Positive 😊
+      {% elif sentiment_data.Neutral > sentiment_data.Negative %}
+        Neutral 😐
+      {% else %}
+        Negative 😠
+      {% endif %}
+    </p>
+
+    <h3>IMDb Reviews</h3>
+    <div id="review-list">
+      {% for review, label in reviews[:10] %}
+        <div class="review-box">
+          <strong class="sentiment-tag">[{{ label }}]</strong> {{ review }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <form id="new-review-form" style="margin-top: 20px;">
+      <textarea id="new-review" rows="4" style="width:100%;" placeholder="Write your review..."></textarea>
+      <button type="submit" class="btn">Analyze & Add Review</button>
+    </form>
+
+    <div id="loader" class="skeleton-card" style="height: 80px; margin: 20px 0; display: none;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script type="application/json" id="reviews-data">
+      {{ reviews_json | safe }}
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById("sentimentChart");
+        const skeleton = document.getElementById("chart-skeleton");
+        const raw = document.getElementById("sentiment-data").textContent;
+        const sentimentCounts = JSON.parse(raw);
+        const ctx = canvas.getContext("2d");
+
+        window.sentimentChart = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: ["Positive", "Neutral", "Negative"],
+            datasets: [{
+              data: [
+                sentimentCounts.Positive,
+                sentimentCounts.Neutral,
+                sentimentCounts.Negative
+              ],
+              backgroundColor: ["#4caf50", "#ffc107", "#f44336"]
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "bottom" }
+            }
+          }
+        });
+
+        skeleton.style.display = "none";
+        canvas.style.display = "block";
+      });
+
+      async function downloadPDF() {
+        const jsPDF = window.jspdf.jsPDF;
+        const doc = new jsPDF();
+
+        doc.setFontSize(16);
+        doc.text("{{ movie.title }} ({{ movie.year }})", 10, 10);
+        doc.setFontSize(12);
+        doc.text("Genre: {{ movie.genre }}", 10, 20);
+        doc.text("Director: {{ movie.director }}", 10, 30);
+        doc.text("IMDb Rating: {{ movie.imdb_rating }}/10", 10, 40);
+
+        const canvas = document.getElementById("sentimentChart");
+        const imgData = canvas.toDataURL("image/png");
+        doc.addImage(imgData, 'PNG', 10, 50, 180, 100);
+
+        doc.save("{{ movie.title | replace(' ', '_') }}_summary.pdf");
+      }
+
+      let currentPage = 1;
+      let reviews = JSON.parse(document.getElementById("reviews-data").textContent);
+      const container = document.getElementById("review-list");
+      const loader = document.getElementById("loader");
+
+      function loadNextPage() {
+        const start = currentPage * 10;
+        const end = start + 10;
+        const next = reviews.slice(start, end);
+
+        next.forEach(([review, label]) => {
+          const div = document.createElement("div");
+          div.className = "review-box";
+          div.innerHTML = `<strong class="sentiment-tag">[${label}]</strong> ${review}`;
+          container.appendChild(div);
+        });
+
+        currentPage++;
+        if (currentPage * 10 >= reviews.length) {
+          observer.disconnect();
+          loader.style.display = "none";
+        }
+      }
+
+      const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+          loader.style.display = "block";
+          setTimeout(() => {
+            loadNextPage();
+            loader.style.display = "none";
+          }, 700);
+        }
+      }, { threshold: 1 });
+
+      observer.observe(loader);
+
+      const form = document.getElementById("new-review-form");
+      const textarea = document.getElementById("new-review");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        const res = await fetch("/analyze-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ review: text })
+        });
+
+        const data = await res.json();
+        reviews.unshift([text, data.label]);
+        const div = document.createElement("div");
+        div.className = "review-box";
+        div.innerHTML = `<strong class="sentiment-tag">[${data.label}]</strong> ${text}`;
+        container.prepend(div);
+
+        const labelIndex = window.sentimentChart.data.labels.indexOf(data.label.split(" ")[0]);
+        if (labelIndex !== -1) {
+          window.sentimentChart.data.datasets[0].data[labelIndex]++;
+          window.sentimentChart.update();
+        }
+
+        textarea.value = "";
+      });
+    </script>
+  {% endif %}
+{% endblock %}

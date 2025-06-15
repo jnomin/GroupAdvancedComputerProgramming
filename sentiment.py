@@ -9,3 +9,6 @@ def analyze_sentiment(text: str) -> dict:
 if __name__ == "__main__":
     review = "This movie was amazing! I loved the visuals and story."
     print(analyze_sentiment(review))
+
+
+    

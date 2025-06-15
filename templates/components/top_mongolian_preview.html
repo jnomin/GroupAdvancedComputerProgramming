@@ -1,0 +1,17 @@
+<div class="featured-container">
+  <h3>🇲🇳 Top 100 Mongolian Films</h3>
+  <div class="featured-scroll">
+    {% for movie in mongolian_movies %}
+      {% if movie.poster_path %}
+        <form action="/movie/{{ movie.title }}" method="get" style="display:inline-block;">
+          <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+            <div class="featured-item">
+              <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+              <p>{{ movie.title }}</p>
+            </div>
+          </button>
+        </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Home - Movie Sentiment Explorer{% endblock %}
+
+{% block content %}
+  <!-- 🔍 Search Form -->
+  {% include "components/search_form.html" %}
+
+  <!-- 🔥 Featured Today -->
+  <h3>🔥 Featured Today</h3>
+  <div class="featured-scroll">
+    {% for movie in featured %}
+      {% if movie.poster_path %}
+        <form action="/movie/{{ movie.title }}" method="get" style="display:inline-block;">
+          <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+            <div class="featured-item">
+              <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+              <p>{{ movie.title }}</p>
+            </div>
+          </button>
+        </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div style="text-align: right; margin-top: 10px;">
+    <a href="/featured/all" class="btn btn-secondary">See All Featured →</a>
+  </div>
+
+  <!-- 🇲🇳 Top 100 Mongolian Films -->
+  <h3 style="margin-top: 40px;">🇲🇳 Top 100 Mongolian Films</h3>
+  <div class="featured-scroll">
+    {% for movie in mongolian_movies %}
+      {% if movie.poster_path %}
+        <form action="/movie/{{ movie.title }}" method="get" style="display:inline-block;">
+          <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+            <div class="featured-item">
+              <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+              <p>{{ movie.title }}</p>
+            </div>
+          </button>
+        </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div style="text-align: right; margin-top: 10px;">
+    <a href="/mongolian/all" class="btn btn-secondary">See All Mongolian →</a>
+  </div>
+
+  <!-- Most Popular Actors (sorted by popularity ascending) Today -->
+  <h3 style="margin-top: 40px;"> Popular Actors</h3>
+  <div class="featured-scroll">
+    {% for person in born_today %}
+      {% if person.profile_path %}
+        <a href="https://www.themoviedb.org/person/{{ person.tmdb_id }}" target="_blank" style="text-decoration: none; color: inherit;">
+          <div class="featured-item" style="text-align: center;">
+            <img src="https://image.tmdb.org/t/p/w300{{ person.profile_path }}" alt="{{ person.name }}" style="width: 140px; border-radius: 10px;">
+            <p style="font-weight: bold;">{{ person.name }}</p>
+            <p style="font-size: 0.85em;"> {{ person.birthday }}</p>
+          </div>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div style="text-align: right; margin-top: 10px;">
+    <a href="/born-today" class="btn btn-secondary">See All Born Today →</a>
+  </div>
+
+  <!-- ⚠️ Error Message -->
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <!-- 🎬 Movie Detail -->
+  {% if movie %}
+    {% include "components/movie_detail.html" %}
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Top 100 Mongolian Films{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 20px;">🇲🇳 All Top 100 Mongolian Films ({{ movies|length }})</h2>
+
+{% if error %}
+  <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+<div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: center;">
+  {% for movie in movies %}
+    {% set image_url = movie.poster_path and 'https://image.tmdb.org/t/p/w300' + movie.poster_path or movie.poster_url %}
+    {% if image_url %}
+      <form action="/movie/{{ movie.title }}" method="get" style="width: 180px;">
+        <button type="submit" style="border: none; background: none; cursor: pointer; width: 100%;">
+          <div class="featured-item">
+            <img src="{{ image_url }}" alt="{{ movie.title }}" style="width: 100%; border-radius: 8px;">
+            <p style="text-align: center; margin-top: 8px;">{{ movie.title }}</p>
+          </div>
+        </button>
+      </form>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<a href="/" style="display: block; margin: 30px auto 0; width: fit-content;" class="btn btn-secondary">← Back to Home</a>
+{% endblock %}

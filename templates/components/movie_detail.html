@@ -1,0 +1,40 @@
+<div class="poster">
+  {% if movie.poster_url and movie.poster_url != "N/A" %}
+    <img src="{{ movie.poster_url }}" alt="Movie Poster">
+    <div>
+      <form method="get" action="/download-poster">
+        <input type="hidden" name="url" value="{{ movie.poster_url }}">
+        <button type="submit">Download Poster</button>
+      </form>
+    </div>
+  {% else %}
+    <img src="https://via.placeholder.com/200x300.png?text=No+Poster" alt="No Poster">
+  {% endif %}
+</div>
+
+<h2>{{ movie.title }} ({{ movie.year }})</h2>
+<p><strong>Genre:</strong> {{ movie.genre }}</p>
+<p><strong>Director:</strong> {{ movie.director }}</p>
+<p><strong>Plot:</strong> {{ movie.plot }}</p>
+<p><strong>IMDb Rating:</strong> {{ movie.imdb_rating }}/10</p>
+
+<div class="sentiment">
+  🧠 Sentiment Score: {{ sentiment }}
+</div>
+
+<div class="buttons">
+  <a href="/export/pdf?title={{ movie.title }}"><button type="button">Export PDF</button></a>
+  <a href="/export/csv?title={{ movie.title }}"><button type="button">Export CSV</button></a>
+  <button type="button" onclick="toggleChart(); renderChart(parseFloat('{{ movie.imdb_rating }}'), parseFloat('{{ sentiment }}'))">Show Chart</button>
+</div>
+
+<div id="chart-container">
+  <canvas id="ratingChart" width="400" height="200"></canvas>
+</div>
+
+<h3>IMDb Reviews</h3>
+{% for review, label in reviews %}
+  <div class="review-box">
+    <strong>[{{ label }}]</strong> {{ review }}
+  </div>
+{% endfor %}
